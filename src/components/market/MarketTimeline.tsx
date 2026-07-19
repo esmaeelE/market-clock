@@ -1,15 +1,17 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useLanguageStore } from "@/store/language.store";
 import { useTimeStore } from "@/store/time.store";
 import { useMarketTimelineStore } from "@/store/marketTimeline.store";
 import { markets, Market } from "@/data/markets";
 import { texts } from "@/data/texts";
+import { getTimezoneOffsetHours, detectUserCity } from "@/utils/time";
+import { useIsMounted } from "@/hooks/useIsMounted";
 
 const MarketTimeline = () => {
-  const [mounted, setMounted] = useState(false);
-  const [userCity, setUserCity] = useState("");
+  const mounted = useIsMounted();
+  const userCity = useMemo(() => (mounted ? detectUserCity() : ""), [mounted]);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { language } = useLanguageStore();
   const isRTL = language === "fa";
@@ -18,17 +20,10 @@ const MarketTimeline = () => {
   const { selectedHour, setSelectedHour } = useMarketTimelineStore();
 
   /**
-   * Syncs time, detects user's timezone city, and handles initial scroll
+   * Starts the shared time-store ticker and handles initial scroll position
    */
   useEffect(() => {
-    setMounted(true);
     const cleanup = start();
-
-    // Dynamically detect user's timezone city
-    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const detectedCity =
-      timeZone.split("/").pop()?.replace("_", " ") || "Local";
-    setUserCity(detectedCity);
 
     if (scrollContainerRef.current) {
       const currentHour = new Date().getHours();
@@ -58,8 +53,10 @@ const MarketTimeline = () => {
     const [openH, openM] = market.openTime.split(":").map(Number);
     const [closeH, closeM] = market.closeTime.split(":").map(Number);
 
+    const marketOffset = getTimezoneOffsetHours(market.timezone, now);
+
     const getUserH = (h: number, m: number) => {
-      const totalMins = h * 60 + m - market.utcOffset * 60 + userOffset * 60;
+      const totalMins = h * 60 + m - marketOffset * 60 + userOffset * 60;
       return Math.floor(((totalMins + 1440) % 1440) / 60);
     };
 
@@ -222,13 +219,17 @@ const MarketTimeline = () => {
         {activeMarkets.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {activeMarkets.map((market) => {
+              const marketOffset = getTimezoneOffsetHours(
+                market.timezone,
+                now
+              );
               const userOpen = getUserTimeEquivalent(
                 market.openTime,
-                market.utcOffset
+                marketOffset
               );
               const userClose = getUserTimeEquivalent(
                 market.closeTime,
-                market.utcOffset
+                marketOffset
               );
               return (
                 <div

@@ -1,28 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useLanguageStore } from "@/store/language.store";
 import { useTimeStore } from "@/store/time.store";
 import { markets, Market } from "@/data/markets";
 import { texts } from "@/data/texts";
+import { getTimezoneOffsetHours, detectUserCity } from "@/utils/time";
+import { isMarketHoliday } from "@/data/holidays";
+import { useIsMounted } from "@/hooks/useIsMounted";
 
 const MarketClock = () => {
-  const [mounted, setMounted] = useState(false);
-  const [userCity, setUserCity] = useState("");
+  const mounted = useIsMounted();
+  const userCity = useMemo(() => (mounted ? detectUserCity() : ""), [mounted]);
   const { language } = useLanguageStore();
   const isRTL = language === "fa";
   const { now, start } = useTimeStore();
 
   /**
-   * Initializes the component, starts the timer and detects local timezone
+   * Starts the shared time-store ticker
    */
   useEffect(() => {
-    setMounted(true);
     const cleanup = start();
-    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const detectedCity =
-      timeZone.split("/").pop()?.replace("_", " ") || "Local";
-    setUserCity(detectedCity);
     return () => cleanup();
   }, [start]);
 
@@ -35,12 +33,14 @@ const MarketClock = () => {
    */
   const getMarketStatus = (market: Market) => {
     const utc = now.getTime() + now.getTimezoneOffset() * 60000;
-    const marketTime = new Date(utc + market.utcOffset * 3600000);
+    const marketOffset = getTimezoneOffsetHours(market.timezone, now);
+    const marketTime = new Date(utc + marketOffset * 3600000);
     const day = marketTime.getDay();
     const hour = marketTime.getHours();
     const minute = marketTime.getMinutes();
 
     if (!market.daysOpen.includes(day)) return "closed";
+    if (isMarketHoliday(market.id, market.timezone, now)) return "closed";
 
     const [openH, openM] = market.openTime.split(":").map(Number);
     const [closeH, closeM] = market.closeTime.split(":").map(Number);
@@ -153,10 +153,14 @@ const MarketClock = () => {
                   .map(Number);
 
                 const userOffset = -new Date().getTimezoneOffset() / 60;
+                const marketOffset = getTimezoneOffsetHours(
+                  market.timezone,
+                  now
+                );
                 const startTotal =
-                  (openH + openM / 60 - market.utcOffset + userOffset) % 12;
+                  (openH + openM / 60 - marketOffset + userOffset) % 12;
                 const endTotal =
-                  (closeH + closeM / 60 - market.utcOffset + userOffset) % 12;
+                  (closeH + closeM / 60 - marketOffset + userOffset) % 12;
 
                 const startPos = getCoordinates(startTotal * 30, radius - 25);
                 const endPos = getCoordinates(endTotal * 30, radius - 25);

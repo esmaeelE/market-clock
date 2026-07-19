@@ -1,8 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import PwaRegister from "@/components/layout/PwaRegister";
+import NotificationManager from "@/components/layout/NotificationManager";
 
 const Estedad = localFont({
   src: [
@@ -21,6 +23,15 @@ const inter = localFont({
 export const metadata: Metadata = {
   title: "Market Clock | ساعت بازارهای جهانی",
   description: "نمایش زنده وضعیت بازارهای مالی جهانی به وقت ایران",
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [{ url: "/favicon-32.png", sizes: "32x32", type: "image/png" }],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#4f46e5",
 };
 
 export default function RootLayout({
@@ -34,6 +45,8 @@ export default function RootLayout({
         suppressHydrationWarning={true}
         className={`${Estedad.variable} ${inter.variable} font-fa antialiased min-h-screen flex flex-col`}
       >
+        <PwaRegister />
+        <NotificationManager />
         <Header />
         <main className="grow">{children}</main>
         <Footer />

@@ -13,6 +13,14 @@ export interface Market {
     fa: string;
   };
   timezone: string;
+  /**
+   * @deprecated Reference value only (standard-time offset), NOT used for any
+   * calculations. Markets that observe daylight saving (London, Frankfurt,
+   * New York, Sydney, ...) have a real UTC offset that shifts twice a year.
+   * All open/closed status, clock, timeline, and overlap logic instead calls
+   * getTimezoneOffsetHours(timezone, date) from "@/utils/time", which reads
+   * the live offset for `timezone` and is always DST-correct.
+   */
   utcOffset: number;
   openTime: string;
   closeTime: string;

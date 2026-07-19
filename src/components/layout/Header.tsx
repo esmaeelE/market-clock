@@ -1,19 +1,47 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { texts } from "@/data/texts";
 import { useLanguageStore } from "@/store/language.store";
 import { useMobileMenuStore } from "@/store/mobileMenu.store";
-import { Menu, X, Clock, Globe, ChevronDown } from "lucide-react";
+import { useNotificationsStore } from "@/store/notifications.store";
+import { Menu, X, Clock, Globe, ChevronDown, Bell, BellOff } from "lucide-react";
+
+const subscribeNever = () => () => {};
 
 export default function Header() {
   const { language, setLanguage } = useLanguageStore();
   const { open, toggle, close } = useMobileMenuStore();
+  const { enabled: notificationsEnabled, setEnabled: setNotificationsEnabled } =
+    useNotificationsStore();
   const [langMenu, setLangMenu] = useState(false);
+  const [notifBlocked, setNotifBlocked] = useState(false);
+  // "Notification" in window is only knowable on the client; snapshot false
+  // on the server so SSR markup matches the pre-hydration client render.
+  const notifSupported = useSyncExternalStore(
+    subscribeNever,
+    () => "Notification" in window,
+    () => false
+  );
 
   const isRTL = language === "fa";
   const t = texts.header[language];
+
+  /**
+   * The <html> tag's lang/dir attributes are set server-side with a static
+   * default (see layout.tsx) since layout.tsx is a Server Component and
+   * can't read the language store. Keep them in sync with the user's actual
+   * choice once we're on the client — otherwise screen readers, browser
+   * spellcheck, and the global text direction stay stuck on the default
+   * language even after switching.
+   */
+  useEffect(() => {
+    document.documentElement.lang = language;
+    document.documentElement.dir = isRTL ? "rtl" : "ltr";
+    document.body.classList.toggle("font-fa", isRTL);
+    document.body.classList.toggle("font-en", !isRTL);
+  }, [language, isRTL]);
 
   const navItems = [
     { href: "/", label: t.nav.home },
@@ -21,6 +49,27 @@ export default function Header() {
     { href: "/contact", label: t.nav.contact },
     { href: "/guide", label: t.nav.guide },
   ];
+
+  const handleNotificationToggle = async () => {
+    if (notificationsEnabled) {
+      setNotificationsEnabled(false);
+      return;
+    }
+    if (Notification.permission === "denied") {
+      setNotifBlocked(true);
+      return;
+    }
+    const permission =
+      Notification.permission === "granted"
+        ? "granted"
+        : await Notification.requestPermission();
+    if (permission === "granted") {
+      setNotifBlocked(false);
+      setNotificationsEnabled(true);
+    } else {
+      setNotifBlocked(true);
+    }
+  };
 
   return (
     <header
@@ -92,6 +141,33 @@ export default function Header() {
                 </div>
               )}
             </div>
+
+            {notifSupported && (
+              <div className="relative">
+                <button
+                  onClick={handleNotificationToggle}
+                  title={
+                    notifBlocked
+                      ? t.notifications.blocked
+                      : notificationsEnabled
+                      ? t.notifications.enabled
+                      : t.notifications.enable
+                  }
+                  aria-label={
+                    notificationsEnabled
+                      ? t.notifications.enabled
+                      : t.notifications.enable
+                  }
+                  className={`flex items-center justify-center h-10 w-10 rounded-xl border transition-all cursor-pointer ${
+                    notificationsEnabled
+                      ? "bg-brand-primary border-brand-primary text-white"
+                      : "bg-surface-soft border-surface-border text-text-main hover:border-brand-primary"
+                  }`}
+                >
+                  {notificationsEnabled ? <Bell size={16} /> : <BellOff size={16} />}
+                </button>
+              </div>
+            )}
 
             <button
               onClick={toggle}

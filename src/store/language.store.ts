@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 export type Language = "fa" | "en";
 
@@ -7,7 +8,12 @@ interface LanguageState {
   setLanguage: (lang: Language) => void;
 }
 
-export const useLanguageStore = create<LanguageState>((set) => ({
-  language: "fa",
-  setLanguage: (lang) => set({ language: lang }),
-}));
+export const useLanguageStore = create<LanguageState>()(
+  persist(
+    (set) => ({
+      language: "fa",
+      setLanguage: (lang) => set({ language: lang }),
+    }),
+    { name: "market-clock-language" }
+  )
+);

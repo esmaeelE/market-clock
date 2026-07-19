@@ -1,14 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { useLanguageStore } from "@/store/language.store";
 import { useMarketOverlapStore } from "@/store/marketOverlapStore";
 import { markets } from "@/data/markets";
 import { texts } from "@/data/texts";
+import { getTimezoneOffsetHours, detectUserCity } from "@/utils/time";
+import { useIsMounted } from "@/hooks/useIsMounted";
 
 const MarketOverlap = () => {
-  const [mounted, setMounted] = useState(false);
-  const [userCity, setUserCity] = useState("");
+  const mounted = useIsMounted();
+  const userCity = useMemo(() => (mounted ? detectUserCity() : ""), [mounted]);
   const { language } = useLanguageStore();
   const isRTL = language === "fa";
   const t = texts.marketOverlap[language];
@@ -17,19 +19,14 @@ const MarketOverlap = () => {
   const { selectedMarkets, toggleMarket, selectAll, selectNone } =
     useMarketOverlapStore();
 
-  useEffect(() => {
-    setMounted(true);
-    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    setUserCity(timeZone.split("/").pop()?.replace("_", " ") || "Local");
-  }, []);
-
   /**
    * Calculates overlaps based on User's Local Time
    */
   const calculateOverlaps = () => {
     if (selectedMarkets.length < 2) return [];
     const overlaps = [];
-    const userOffset = -new Date().getTimezoneOffset() / 60;
+    const now = new Date();
+    const userOffset = -now.getTimezoneOffset() / 60;
 
     for (let hour = 0; hour < 24; hour++) {
       const activeMarkets = stockMarkets.filter((market) => {
@@ -37,10 +34,11 @@ const MarketOverlap = () => {
 
         const [openH] = market.openTime.split(":").map(Number);
         const [closeH] = market.closeTime.split(":").map(Number);
+        const marketOffset = getTimezoneOffsetHours(market.timezone, now);
 
         // Convert market hours to user local hours
         const marketToUser = (h: number) =>
-          (h - market.utcOffset + userOffset + 24) % 24;
+          (h - marketOffset + userOffset + 24) % 24;
         const userOpen = marketToUser(openH);
         const userClose = marketToUser(closeH);
 

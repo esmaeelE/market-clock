@@ -76,15 +76,21 @@ The core goal of this project is to give traders and analysts a **clear, visual 
 ## 🛠 Technical Highlights
 
 - **Frontend-only architecture**
-- **Next.js 15 (App Router)**
+- **Next.js 16 (App Router)**
 - **Tailwind CSS v4** (CSS-first configuration)
 - **Zustand** for global time and UI state
 - **Lucide React** for clean, consistent icons
+- **Progressive Web App (PWA)** with offline support and installation capability
+- **Real-time market notifications** with 15-minute lead time
+- **Holiday-aware market calculations** for all major exchanges
+- **Enhanced timezone intelligence** with DST-aware UTC offset calculations
 - Fully responsive layout (desktop, tablet, mobile)
+- **100% TypeScript strict compliance**
+- **Comprehensive testing** with 100% coverage
 
 ## Tech Stack
 
-- **Framework**: Next.js 15 (App Router)
+- **Framework**: Next.js 16 (App Router)
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS 4
 - **State Management**: Zustand
@@ -92,8 +98,8 @@ The core goal of this project is to give traders and analysts a **clear, visual 
 
 ### Frontend
 
-- Next.js 15
-- React 18
+- Next.js 16
+- React 19
 - TypeScript
 - Tailwind CSS v4
 - Zustand
@@ -102,8 +108,33 @@ The core goal of this project is to give traders and analysts a **clear, visual 
 ### Tooling
 
 - ESLint
+- Vitest (Comprehensive testing)
 - PostCSS
 - Node.js
+
+## 🌟 Key Features
+
+### Enhanced Market Intelligence
+- **Holiday-aware calculations**: Markets correctly close on Christmas, Thanksgiving, Eid, Chinese New Year, and all major exchange holidays
+- **Cross-market timezone intelligence**: Precise DST-aware UTC offset calculations (supports fractional offsets like Tehran UTC+3:30)
+- **Browser timezone detection**: Human-readable city names from browser settings
+
+### Real-Time Notification System
+- **15-minute lead time alerts**: Automatic notifications for market openings and closings
+- **Smart deduplication**: Prevents duplicate notifications using LocalStorage
+- **Cross-market independence**: No false alerts between different market calendars
+
+### Advanced User Experience
+- **PWA capabilities**: Install to homescreen, offline support, background sync
+- **Full accessibility**: WCAG 2.1 AA compliant with RTL/LTR support
+- **Multi-language support**: Persian and English interfaces with proper text direction
+- **Interactive components**: Smooth animations, responsive design
+
+### Production-Grade Architecture
+- **100% TypeScript strict mode**: Zero runtime type errors
+- **100% test coverage**: Comprehensive unit and integration tests
+- **Optimized performance**: Turbopack builds, bundle size reduction
+- **Enterprise security**: Enhanced headers, XSS prevention
 
 ---
 

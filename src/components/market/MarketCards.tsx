@@ -4,19 +4,21 @@ import { useEffect, useState } from "react";
 import { useLanguageStore } from "@/store/language.store";
 import { markets, Market } from "@/data/markets";
 import { texts } from "@/data/texts";
+import { getTimezoneOffsetHours } from "@/utils/time";
+import { isMarketHoliday } from "@/data/holidays";
+import { useIsMounted } from "@/hooks/useIsMounted";
 
 const MarketCards = () => {
-  const [mounted, setMounted] = useState(false);
+  const mounted = useIsMounted();
   const { language } = useLanguageStore();
   const isRTL = language === "fa";
   const [currentTime, setCurrentTime] = useState(new Date());
   const [filter, setFilter] = useState<"all" | "open" | "closed">("all");
 
   /**
-   * Initializes component and updates current time every second
+   * Updates current time every second
    */
   useEffect(() => {
-    setMounted(true);
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
@@ -44,12 +46,14 @@ const MarketCards = () => {
    */
   const getMarketStatus = (market: Market) => {
     const utc = currentTime.getTime() + currentTime.getTimezoneOffset() * 60000;
-    const marketTime = new Date(utc + 3600000 * market.utcOffset);
+    const marketOffset = getTimezoneOffsetHours(market.timezone, currentTime);
+    const marketTime = new Date(utc + 3600000 * marketOffset);
     const day = marketTime.getDay();
     const hour = marketTime.getHours();
     const minute = marketTime.getMinutes();
 
     if (!market.daysOpen.includes(day)) return "weekend";
+    if (isMarketHoliday(market.id, market.timezone, currentTime)) return "holiday";
 
     const [openHour, openMin] = market.openTime.split(":").map(Number);
     const [closeHour, closeMin] = market.closeTime.split(":").map(Number);
@@ -71,7 +75,8 @@ const MarketCards = () => {
    */
   const getMarketLocalTime = (market: Market) => {
     const utc = currentTime.getTime() + currentTime.getTimezoneOffset() * 60000;
-    const marketTime = new Date(utc + 3600000 * market.utcOffset);
+    const marketOffset = getTimezoneOffsetHours(market.timezone, currentTime);
+    const marketTime = new Date(utc + 3600000 * marketOffset);
     return marketTime.toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",
@@ -93,6 +98,8 @@ const MarketCards = () => {
         return "border-slate-300 shadow-transparent";
       case "weekend":
         return "border-rose-500 shadow-rose-50";
+      case "holiday":
+        return "border-purple-400 shadow-purple-50";
       default:
         return "border-gray-200";
     }
@@ -104,7 +111,7 @@ const MarketCards = () => {
     const status = getMarketStatus(market);
     return filter === "open"
       ? status === "open" || status === "warning"
-      : status === "closed" || status === "weekend";
+      : status === "closed" || status === "weekend" || status === "holiday";
   });
 
   return (
@@ -147,8 +154,12 @@ const MarketCards = () => {
         {filteredMarkets.map((market) => {
           const status = getMarketStatus(market);
           const localTime = getMarketLocalTime(market);
-          const tehranOpen = getTehranTime(market.openTime, market.utcOffset);
-          const tehranClose = getTehranTime(market.closeTime, market.utcOffset);
+          const marketOffset = getTimezoneOffsetHours(
+            market.timezone,
+            currentTime
+          );
+          const tehranOpen = getTehranTime(market.openTime, marketOffset);
+          const tehranClose = getTehranTime(market.closeTime, marketOffset);
           const statusClass = getStatusStyles(status);
 
           return (
@@ -183,6 +194,8 @@ const MarketCards = () => {
                       ? "bg-amber-400"
                       : status === "weekend"
                       ? "bg-rose-500"
+                      : status === "holiday"
+                      ? "bg-purple-400"
                       : "bg-slate-400"
                   }`}
                 >
@@ -273,8 +286,8 @@ const MarketCards = () => {
                   {t.timezone}
                 </span>
                 <span className="font-mono text-[10px] font-black text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
-                  UTC {market.utcOffset >= 0 ? "+" : ""}
-                  {market.utcOffset}
+                  UTC {marketOffset >= 0 ? "+" : ""}
+                  {marketOffset}
                 </span>
               </div>
             </div>

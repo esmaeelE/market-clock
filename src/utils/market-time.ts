@@ -1,5 +1,6 @@
 import { Market } from "@/data/markets";
 import { formatTime } from "./time";
+import { isMarketHoliday } from "@/data/holidays";
 
 function parseTime(time: string) {
   const [hour, minute] = time.split(":").map(Number);
@@ -62,9 +63,11 @@ export function computeMarket(market: Market, now: Date) {
   const dayIndex = dayIndexMap[localDay ?? "Sun"];
 
   const isWorkingDay = market.daysOpen.includes(dayIndex);
+  const isHoliday = isMarketHoliday(market.id, market.timezone, now);
 
   const isOpen =
     isWorkingDay &&
+    !isHoliday &&
     isTimeBetween(now, market.openTime, market.closeTime, market.timezone);
 
   return {
@@ -73,5 +76,6 @@ export function computeMarket(market: Market, now: Date) {
     iranTime,
     utcTime,
     isOpen,
+    isHoliday,
   };
 }

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>آفلاین | Offline — Market Clock</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f8fafc;
+      color: #1e293b;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      text-align: center;
+      padding: 24px;
+      box-sizing: border-box;
+    }
+    .card {
+      max-width: 420px;
+    }
+    .icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      background: #4f46e5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      color: white;
+      font-size: 28px;
+    }
+    h1 {
+      font-size: 20px;
+      margin: 0 0 8px;
+    }
+    p {
+      font-size: 14px;
+      color: #64748b;
+      line-height: 1.6;
+      margin: 4px 0;
+    }
+    button {
+      margin-top: 20px;
+      background: #4f46e5;
+      color: white;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">⏱</div>
+    <h1>اتصال اینترنت برقرار نیست</h1>
+    <p>این صفحه هنوز در حافظه موقت ذخیره نشده. لطفاً اتصال خود را بررسی کرده و دوباره تلاش کنید.</p>
+    <p style="margin-top:16px; direction:ltr;">You're offline, and this page hasn't been cached yet.<br />Check your connection and try again.</p>
+    <button onclick="location.reload()">تلاش دوباره · Retry</button>
+  </div>
+</body>
+</html>
