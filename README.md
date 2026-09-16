@@ -156,3 +156,14 @@ npm run build
 
 # Start production server
 npm run start
+
+### 🐳 Docker
+
+# Build the image
+docker build -t market-clock .
+
+# Run the container
+docker run -p 3000:3000 market-clock
+
+# Open browser
+http://localhost:3000

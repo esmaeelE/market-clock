@@ -1,0 +1,15 @@
+node_modules
+.next
+.git
+.gitignore
+Dockerfile
+.dockerignore
+README.md
+milestone.md
+coverage
+*.md
+.env*
+!.env.example
+.vercel
+.vscode
+.DS_Store
